@@ -1,42 +1,76 @@
 <script lang="ts" setup>
-const row = 20;
-const column = 10;
+import { reactive } from "vue";
+import { Tetromino, TETROMINO_TYPE } from '../common/Tetromino';
+import { Field } from '../common/Field';
 
-const field = new Array(row);
+let staticField = new Field();
+const tetris = reactive({
+  field: new Field(),
+});
 
-for (let i=0; i < row; i++) {
-  const fieldColumn = new Array(column).fill(0);
-  field[i] = fieldColumn;
-}
+const tetromino = reactive({
+  current: Tetromino.random(),
+  position: { x: 3, y: 0 },
+});
 
-field[0][0] = 1;
-field[1][0] = 1;
-field[2][0] = 1;
-field[3][0] = 1;
+const classBlockColor = (_x: number, _y: number): string => {
+  const type = tetris.field.data[_y][_x];
 
-const classBlockColor = (x: number, y: number): string => {
-  const type = field[y][x];
-  if (type > 0) {
-    switch (type) {
-      case 1:
-        return "block-i";
-      case 2:
-        return "block-o";
-      case 3:
-        return "block-s";
-      case 4:
-        return "block-z";
-      case 5:
-        return "block-j";
-      case 6:
-        return "block-l";
-      case 7:
-        return "block-t";
-      default:
-        return "";
+  // テトリスのフィールドのマス目が空白以外なら、テトリミノの識別子を返却する
+  if(type > 0) {
+    return Tetromino.id(type as TETROMINO_TYPE);
+  }
+
+  // テトリスのフィールドのマス目が空白であれば、
+  // 落下中のテトリミノの描画範囲をチェックする
+  const { x, y } = tetromino.position;
+  const { data } = tetromino.current;
+
+  if (y <= _y && _y < y + data.length) {
+    const cols = data[_y - y];
+    if (x <= _x && _x < x + cols.length) {
+      if (cols[_x - x] > 0) {
+        return Tetromino.id(cols[_x - x] as TETROMINO_TYPE);
+      }
     }
   }
+
+  // 上記いずれの条件にも当てはまらければ、空白を返却する
+  return "";
 }
+
+const canDropCurrentTetromino = (): boolean => {
+  const { x, y } = tetromino.position;
+  const droppedPosition = {x, y: y + 1};
+
+  const data = tetromino.current.data;
+  return tetris.field.canMove(data, droppedPosition);
+}
+
+const nextTetrisField = () => {
+  const data = tetromino.current.data;
+  const position = tetromino.position;
+
+  tetris.field.update(data, position);
+
+  staticField = new Field(tetris.field.data);
+  tetris.field = Field.deepCopy(staticField);
+
+  tetromino.current = Tetromino.random();
+  tetromino.position = { x: 3, y: 0 };
+}
+
+setInterval(() => {
+  tetris.field = Field.deepCopy(staticField);
+
+  if(canDropCurrentTetromino()) {
+    tetromino.position.y++;
+  } else {
+    nextTetrisField();
+  }
+}, 1 * 1000);
+
+tetris.field.update(tetromino.current.data, tetromino.position);
 
 </script>
 
@@ -46,9 +80,7 @@ const classBlockColor = (x: number, y: number): string => {
 
   <div class="container">
     <table class="field" style="border-collapse: collapse">
-      <tr
-          v-for="(row, y) in field"
-          :key="y">
+      <tr v-for="(row, y) in tetris.field.data" :key="y">
         <td
             class="block"
             v-for="(col, x) in row"

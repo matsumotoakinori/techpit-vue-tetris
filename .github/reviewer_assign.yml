@@ -14,6 +14,6 @@ jobs:
       - name: Assign Reviewer
         uses: hkusu/review-assign-action@v1.0.0
         with:
-          reviewers: 'matsumotoakinori'
+          reviewers: matsumotoakinori
           max-num-of-reviewers: 1
-          assignees: 'matsumotoakinori'
+          assignees: matsumotoakinori

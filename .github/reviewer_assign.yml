@@ -16,3 +16,4 @@ jobs:
         with:
           reviewers: 'matsumotoakinori'
           max-num-of-reviewers: 1
+          assignees: 'matsumotoakinori'

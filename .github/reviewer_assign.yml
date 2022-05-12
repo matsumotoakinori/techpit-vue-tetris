@@ -1,0 +1,18 @@
+name: Reviewer Assign Action
+
+on:
+  pull_request_target:
+    types: [opened]
+
+jobs:
+  reviewer-assing:
+    timeout-minutes: 10
+    runs-on: ubuntu-18.04
+    if: contains(github.head_ref, 'dependabot/npm_and_yarn')
+    steps:
+      # ランダムでレビュアーをアサイン
+      - name: Assign Reviewer
+        uses: hkusu/review-assign-action@v1.0.0
+        with:
+          reviewers: 'matsumotoakinori'
+          max-num-of-reviewers: 1
